@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "target": "ES2019",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["es2019", "DOM"],
+
+    "types": ["node"],
+
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "5.0",
+
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true
+  }
+}
