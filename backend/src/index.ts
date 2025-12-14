@@ -1,8 +1,33 @@
 import WebSocket, {WebSocketServer} from "ws";
 import { handleJoin, handleOffer, handleAnswer, handleIceCandidate, handleDisconnect } from "./sockets/handlers";
 import type { ClientMessage } from "./types/signalling";
+import http from 'http';
+import { getIceServers } from "./turn";
 
-const wss = new WebSocketServer({port:8080});
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
+
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/ice") {
+    try {
+      const iceServers = await getIceServers();
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify(iceServers));
+    } catch (err) {
+      res.writeHead(500);
+      res.end("Failed to get ICE servers");
+    }
+    return;
+  }
+
+  res.writeHead(404);
+  res.end();
+});
+
+const wss = new WebSocketServer({ server });
+
 
 wss.on("connection", (ws: WebSocket) => {
     console.log("New client connected");
@@ -58,4 +83,7 @@ wss.on("connection", (ws: WebSocket) => {
     });
 });
 
-console.log("WebRTC running on ws://localhost:8080");
+server.listen(PORT, () => {
+    console.log(`Signaling + TURN server running on port ${PORT}`);
+  });
+  
