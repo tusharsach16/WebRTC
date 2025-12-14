@@ -159,6 +159,8 @@ export function useWebRTC() {
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = null;
           }
+          pcRef.current?.close();
+          pcRef.current = null;
           setStatus("disconnected");
           break;
         }
@@ -198,9 +200,16 @@ export function useWebRTC() {
       localVideoRef.current.srcObject = stream;
     }
 
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
+    let iceServers;
+    try {
+      const res = await fetch("https://webrtc-signaling-l06y.onrender.com/ice");
+      iceServers = await res.json();
+    } catch {
+      iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+    }
+
+    const pc = new RTCPeerConnection({ iceServers });
+
     pcRef.current = pc;
 
     stream.getTracks().forEach((track) => {
@@ -239,10 +248,57 @@ export function useWebRTC() {
     });
   }
 
+  function toggleMic() {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+  
+    const audioTrack = stream.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+    }
+  }
+  
+  function toggleCamera() {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+  
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.enabled = !videoTrack.enabled;
+    }
+  }
+
+  function leaveCall() {
+    pcRef.current?.close();
+    pcRef.current = null;
+  
+    localStreamRef.current?.getTracks().forEach(track => track.stop());
+    localStreamRef.current = null;
+  
+    remoteStreamRef.current = null;
+  
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+  
+    peerIdRef.current = null;
+    roomIdRef.current = null;
+  
+    setStatus("idle");
+  }
+  
+  
+
   return {
     status,
     localVideoRef,
     remoteVideoRef,
     joinRoom,
+    toggleMic,
+    toggleCamera,
+    leaveCall
   };
 }
