@@ -45,7 +45,7 @@ export function useWebRTC() {
   const peerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket("wss://webrtc-signaling-l06y.onrender.com");
     wsRef.current = ws;
 
     ws.onopen = () => {
